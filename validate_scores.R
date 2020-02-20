@@ -23,14 +23,16 @@ for(ii in ls(rawdata)) assign(ii,rawdata[[ii]]);
 scr_timewindow <- 730;
 #' ### Start
 #'
-names(datgr) <- gsub('START_DATE','dt',names(datgr)) %>% tolower;
-names(datfr) <- gsub('START_DATE','dt',names(datfr)) %>% tolower;
+#+ rename_cols
+names(datgr) <- gsub('START_DATE|start_date','dt',names(datgr)) %>% tolower;
+names(datfr) <- gsub('START_DATE|start_date','dt',names(datfr)) %>% tolower;
 #' Format times
+#+ format_times
 datgr <- mutate(datgr,dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
   arrange(patient_num,dt) %>% group_by(patient_num);
-if(!'dt' %in% names(datgr) && 'START_DATE' %in% names(datgr)){
-  datgr$dt <- datgr$START_DATE;
-}
+# if(!'dt' %in% names(datgr) && 'START_DATE' %in% names(datgr)){
+#   datgr$dt <- datgr$START_DATE;
+# }
 datfr <- mutate(datfr[,1:3],dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
   arrange(patient_num,dt);
 
