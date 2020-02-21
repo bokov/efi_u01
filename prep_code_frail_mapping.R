@@ -31,16 +31,34 @@ panderOptions('p.copula',', and ');
 
 .currentscript <- current_scriptname('prep_code_frail_mapping.R');
 #' ### Clean up mapping table
-#code2grpin
 code2grpout <- group_by(code2grpin,`No. `) %>% group_modify(function(xx,yy,...){
-  with(xx,data.frame(diag=c(`ICD-10 Definition`,`ICD-9 Definition`) %>%
-                       strsplit(',[ ]*') %>% unlist %>% sapply(ranges) %>%
-                       unlist %>% gsub('[.]?x[.]?$','',.)
-                     ,deficit=Deficit[1],source=Source[1],notes=Notes[1]))}) %>%
-  select(1:5);
+  #if(xx$Deficit[1]=='Peptic Ulcer') browser();
+  diag <- with(xx,c(`ICD-10 Definition`,`ICD-9 Definition`) %>%
+                 trimws %>%
+                 gsub('(43[34])\\.x1',paste(paste0('\\1.',0:9,'1')
+                                          ,collapse=', '),.) %>%
+                 gsub('([0-9]) ([0-9])','\\1, \\2',.) %>%
+                 gsub('[ ]*-[ ]*','-',.) %>%
+                 strsplit(',[ ]*') %>% unlist %>%
+                 sapply(ranges,simplify=FALSE) %>% unlist %>% trimws %>%
+                 gsub('[.]?x[.]?$','',.));
+  diag <- gsub('[.]x(-|$)','\\1',diag) %>% sapply(ranges,simplify=FALSE) %>%
+    unlist %>% trimws;
+  with(xx,data.frame(diag=diag,deficit=Deficit[1],source=Source[1]
+                     ,notes=Notes[1]))});
+#' Standardize names
 names(code2grpout)[1] <- 'grp';
+#' Check for duplicates
+table(code2grpout$diag) %>% `[`(.>1) %>% cbind %>%
+  pander(justify='right',col.names='Number of Duplicates');
+#' remove duplicates
+code2grpout <- subset(code2grpout,!(grp==5 & diag %in% c('404.03','404.13'
+                                                         ,'404.93')) &
+                        !(grp==17 & diag=='412'));
+
 export(code2grpout,'local/out/code_to_efigrp.csv');
-with(code2grpout,paste0('\nunion select ',grp,", '",diag,"', '",deficit,"', '",source,"' from dual")) %>%
+with(code2grpout,paste0('\nunion select ',grp,", '",diag,"', '",deficit,"'
+                        , '",source,"' from dual")) %>%
   cat(file='local/out/code_to_efigrp.sql');
 #'
 #'
