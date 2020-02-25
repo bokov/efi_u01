@@ -17,7 +17,6 @@ knitr::opts_template$set(standard=list(echo=.debug>0,message=.debug>1
 .deps <- c( 'dictionary.R' );
 # do not edit the next two lines
 .junk<-(source('./scripts/global.R',chdir=TRUE,echo=FALSE));
-load('dictionary.R.unsampled.rdata');
 # Set some formatting options for this document
 panderOptions('table.alignment.default','right');
 panderOptions('table.alignment.rownames','right');
@@ -27,6 +26,7 @@ panderOptions('p.copula',', and ');
 
 .currentscript <- current_scriptname('characterize_frailties.R');
 load('dictionary.R.unsampled.rdata');
+for(ii in ls(rawdata)) assign(ii,rawdata[[ii]]);
 #'
 #+ prep_data, opts.label='standard'
 dat01[,c('START_DATE','DEATH_DATE','BIRTH_DATE')] <- lapply(dat01[
@@ -98,7 +98,7 @@ pander(cph00);
 #' Distribution of censored vs deceased (blue) frailties
 #+ frail_dist, opts.label='standard'
 ggplot(subset(dat01a,nvisit>5),aes(x=NVAL_NUM,fill=cens00,color=cens00)) +
-  geom_density(adjust=1.5,alpha=0.5);
+  geom_density(adjust=2,alpha=0.5);
 #'
 #' Start date vs frailty score
 #+ start_vs_frail, opts.label='standard'
