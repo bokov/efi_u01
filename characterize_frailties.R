@@ -10,7 +10,8 @@
 #+ echo=FALSE
 .debug <- 0;
 knitr::opts_template$set(standard=list(echo=.debug>0,message=.debug>1
-                                       ,warning=.debug>1,error=.debug>0))
+                                       ,warning=.debug>1,error=.debug>0
+                                       ,cache.comments=FALSE))
 .projpackages <- c('GGally','tableone','pander','dplyr','ggplot2','lubridate'
                    ,'survival','survminer');
 .deps <- c( 'dictionary.R' );
