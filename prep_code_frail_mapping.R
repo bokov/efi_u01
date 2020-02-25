@@ -1,22 +1,13 @@
 #' ---
-#' title: "Example Analysis"
+#' title: "Create Frailty Group Mapper"
 #' css: "production.css"
 #' output:
 #'   html_document:
 #'     toc: true
-#'     toc_float: true
 #' ---
 #'
 #' ### Settings
 #'
-#' In the below two lines are the minimum script-level settings you need.
-#' The `.projpackages` object has the names of the packages you need installed
-#' if necessary and then loaded for this scriport. The `.deps` object contains
-#' other scriports on which this one _directly_ depends (you don't need to worry
-#' about the indirect ones-- each scriport manages its own dependencies for
-#' packages and scriports). The recommended value to start with is the one shown
-#' here. You can add more if the need arises later. For more information, please
-#' see the [overview](overview.html) scriport.
 .projpackages <- c('GGally','tableone','pander','dplyr','ggplot2');
 .deps <- c( 'dictionary.R' );
 #+ load_deps, echo=FALSE, message=FALSE, warning=FALSE,results='hide'
