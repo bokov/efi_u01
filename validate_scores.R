@@ -26,6 +26,7 @@ scr_timewindow <- 730;
 #+ rename_cols
 names(datgr) <- gsub('START_DATE|start_date','dt',names(datgr)) %>% tolower;
 names(datfr) <- gsub('START_DATE|start_date','dt',names(datfr)) %>% tolower;
+names(datfr) <- gsub('nval_num','frailty',names(datfr));
 #' Format times
 #+ format_times
 datgr <- mutate(datgr,dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
@@ -33,7 +34,8 @@ datgr <- mutate(datgr,dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
 # if(!'dt' %in% names(datgr) && 'START_DATE' %in% names(datgr)){
 #   datgr$dt <- datgr$START_DATE;
 # }
-datfr <- mutate(datfr[,1:3],dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
+datfr <- mutate(datfr[,c('patient_num','dt','frailty')]
+                ,dt=parse_date_time(dt,c('mdy_HMp','Ymd_HMS'))) %>%
   arrange(patient_num,dt);
 
 #+ datgr2fr, warning=FALSE
@@ -44,6 +46,16 @@ datgr2fr <- group_by(datgr,patient_num) %>% group_modify(function(aa,bb,...){
       })));
     #browser();
   },keep=TRUE);
+
+# find denominator
+if((dbfrmx<- max(datfr$frailty,na.rm=TRUE))<=1 &&
+   (xcfrmx <- max(datgr2fr$fr,na.rm=TRUE)) > 1){
+  denom <- xcfrmx/dbfrmx;
+  if(denom == round(denom)) datgr2fr$fr <- datgr2fr$fr/denom else {
+    warning('Mismatch between database version and crosscheck version.\n'
+            ,'Could not find a conversion factor.')
+  }
+}
 
 setNames(sapply(list(datgr,datfr,datgr2fr),function(xx){
   nrow(unique(xx))}),c('Patients/Dates/Groups'
