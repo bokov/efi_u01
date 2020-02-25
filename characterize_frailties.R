@@ -9,7 +9,7 @@
 #' ### Settings
 #'
 .projpackages <- c('GGally','tableone','pander','dplyr','ggplot2','lubridate'
-                   ,'survival');
+                   ,'survival','survminer');
 .deps <- c( 'dictionary.R' );
 #+ load_deps, echo=FALSE, message=FALSE, warning=FALSE,results='hide'
 # do not edit the next two lines
