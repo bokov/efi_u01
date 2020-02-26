@@ -42,10 +42,19 @@ datfr <- mutate(datfr[,c('patient_num','dt','frailty')]
 datgr2fr <- group_by(datgr,patient_num) %>% group_modify(function(aa,bb,...){
     out <- unique(data.frame(dt=aa$dt,fr=sapply(aa$dt,function(xx){
       #if(xx %in% xcheck$dt && bb[[1]] %in% xcheck$patient_num) browser()
-      length(unique(na.omit(aa$grp[between(xx - aa$dt,0,scr_timewindow)])))
+      length(unique(na.omit(aa$grp[between(as.numeric(xx - aa$dt,units='days')
+                                           ,0,scr_timewindow)])))
       })));
     #browser();
   },keep=TRUE);
+
+# test code to find frailties that actually go UP... currently 0 patients have
+# this
+# baz <- group_by(foo90_2a,patient_num) %>% group_modify(function(aa,bb,...){if(any(diff(aa$fr)>0)) browser(); aa[F,]})
+#
+# creating datgr with an artificial increase in frailty score inserted at row 861
+# (example only, in other version of the data the patient_num, dt, and grp will be different)
+# datgr2 <- bind_rows(datgr[1:860,],data.frame(patient_num='1000727568',dt=parse_date_time('2018-01-07','Ymd'),grp=7:9,stringsAsFactors = F),datgr[-(1:860),])
 
 # find denominator
 if((dbfrmx<- max(datfr$frailty,na.rm=TRUE))<=1 &&
