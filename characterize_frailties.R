@@ -29,37 +29,38 @@ load('dictionary.R.unsampled.rdata');
 for(ii in ls(rawdata)) assign(ii,rawdata[[ii]]);
 #'
 #+ prep_data, opts.label='standard'
-dat01[,c('START_DATE','DEATH_DATE','BIRTH_DATE')] <- lapply(dat01[
-  ,c('START_DATE','DEATH_DATE','BIRTH_DATE')],parse_date_time
+dat01[,c('start_date','death_date','birth_date')] <- lapply(dat01[
+  ,c('start_date','death_date','birth_date')],parse_date_time
   ,orders=c('mdy_HMp','Ymd_HMS'));
 
 set.seed(project_seed);
-dat01a <- group_by(dat01,PATIENT_NUM) %>%
-  subset(AGE_AT_VISIT_DAYS>0 & START_DATE > as.POSIXct('2007-01-01') &
-           !(is.na(DEATH_DATE) & VITAL_STATUS_CD == 'y') &
-           ifelse(is.na(DEATH_DATE),TRUE
-                  ,as.Date(DEATH_DATE) > as.Date(START_DATE))) %>%
-  mutate(lastdate=as.Date(coalesce(DEATH_DATE,START_DATE))
-         ,START_DATE = as.Date(START_DATE)) %>%
+dat01a <- group_by(dat01,patient_num) %>%
+  subset(age_at_visit_days>0 & start_date > as.POSIXct('2007-01-01') &
+           !(is.na(death_date) & vital_status_cd == 'y') &
+           ifelse(is.na(death_date),TRUE
+                  ,as.Date(death_date) > as.Date(start_date))) %>%
+  mutate(lastdate=as.Date(coalesce(death_date,start_date))
+         ,start_date = as.Date(start_date)) %>%
   group_modify(function(xx,yy,...){
-  out <- cbind(xx[sample(seq_len(nrow(xx)),1),]
-               # confirmed that all patient_num/age_at_visit_days combos unique
-               ,nvisit = nrow(xx), lastvis = max(xx$AGE_AT_VISIT_DAYS)
-               ,med_frail=median(xx$NVAL_NUM,na.rm = TRUE)
-               ,q3_frail=quantile(xx$NVAL_NUM,.75,na.rm=TRUE)
-               ,max_frail=max(xx$NVAL_NUM,na.rm=TRUE)
+    out <- cbind(xx[sample(seq_len(nrow(xx)),1),]
+                 # confirmed all patient_num/age_at_visit_days combos unique
+                 ,nvisit = nrow(xx)
+                 , lastvis = max(xx$age_at_visit_days,na.rm = TRUE)
+                 ,med_frail=median(xx$nval_num,na.rm = TRUE)
+                 ,q3_frail=quantile(xx$nval_num,.75,na.rm=TRUE)
+               ,max_frail=max(xx$nval_num,na.rm=TRUE)
         # censoring variable-- if dead, TRUE otherwise, FALSE
         # had used VITAL_STATUS_CD, except that there are patients with
         # apparently that incorrectly coded, so directly checking for
         # existence of DEATH_DATE now
-        ,cens00 = any(!is.na(xx$DEATH_DATE)));
+        ,cens00 = any(!is.na(xx$death_date)));
   #if(out$VITAL_STATUS_CD=='y') browser();
   # days until death or last available followup, depending on cens00
     # this 'units' argument is key! Otherwise, the default unit can be chosen
     # as something other than you expect (e.g. seconds when the difference = 0)
     # and you get huge values because the entire result is converted to numeric
     # in seconds rather than days
-  out$time00 <- as.numeric(max(xx$lastdate) - out$START_DATE
+  out$time00 <- as.numeric(max(xx$lastdate) - out$start_date
                                  ,units='days');
   out;
   }) %>% subset(nvisit > 2);
@@ -84,7 +85,7 @@ pander(attr(dat01,'tblinfo') %>% select(-c('nn','md5')));
 #'
 #+ survfit, opts.label='standard'
 survfit(Surv(pmin(time00,2922)/365.25
-             ,cens00 & time00 <= 2922)~NVAL_NUM>median(NVAL_NUM),dat01a
+             ,cens00 & time00 <= 2922)~nval_num>median(nval_num),dat01a
         ,subset=nvisit>10) %>%
   ggsurvplot(ylim=c(0.9,1),xlab='Years',break.time.by=1,conf.int=TRUE
              ,legend.labs=c('Low Frailty','High Frailty')
@@ -92,29 +93,29 @@ survfit(Surv(pmin(time00,2922)/365.25
 
 #+ cph00, opts.label='standard'
 cph00 <- coxph(Surv(pmin(time00,2922)/365.25
-                    ,cens00 & time00 <= 2922)~NVAL_NUM,dat01a,subset=nvisit>10);
+                    ,cens00 & time00 <= 2922)~nval_num,dat01a,subset=nvisit>10);
 pander(cph00);
 
 #' Distribution of censored vs deceased (blue) frailties
 #+ frail_dist, opts.label='standard'
-ggplot(subset(dat01a,nvisit>5),aes(x=NVAL_NUM,fill=cens00,color=cens00)) +
-  geom_density(adjust=2,alpha=0.5);
+ggplot(subset(dat01a,nvisit>5),aes(x=nval_num,fill=cens00,color=cens00)) +
+  geom_density(adjust=4,alpha=0.5);
 #'
 #' Start date vs frailty score
 #+ start_vs_frail, opts.label='standard'
-ggplot(subset(dat01,START_DATE > as.POSIXct('2007-01-01'))
-       ,aes(x=START_DATE,y=log1p(NVAL_NUM),group=PATIENT_NUM
-            ,color=AGE_IN_YEARS_NUM)) + geom_step(alpha=0.5);
+ggplot(subset(dat01,start_date > as.POSIXct('2007-01-01'))
+       ,aes(x=start_date,y=log1p(nval_num),group=patient_num
+            ,color=age_in_years_num)) + geom_step(alpha=0.5);
 #'
 #'
 #' Age vs frailty score for deceased patients
 #'
 #+ age_vs_frail, opts.label='standard'
-ggplot(subset(dat01,!is.null(DEATH_DATE) & DEATH_DATE>=START_DATE)
-       ,aes(x=AGE_AT_VISIT_DAYS,y=log1p(NVAL_NUM),group=PATIENT_NUM
-            ,color=AGE_IN_YEARS_NUM)) + geom_step(alpha=0.5) +
+ggplot(subset(dat01,!is.null(death_date) & death_date>=start_date)
+       ,aes(x=age_at_visit_days/365.25,y=log1p(nval_num),group=patient_num
+            ,color=age_in_years_num)) + geom_step(alpha=0.5) +
   geom_point(data=subset(dat01a,cens00 & nvisit > 5)
-             ,mapping=aes(x=time00+AGE_AT_VISIT_DAYS,y=(log1p(NVAL_NUM)))
+             ,mapping=aes(x=(time00+age_at_visit_days)/365.25,y=(log1p(nval_num)))
              ,color='red',cex=0.5);
 #' ### Save results
 #'
