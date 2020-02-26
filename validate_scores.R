@@ -14,6 +14,7 @@
 .junk<-capture.output(source('./scripts/global.R',chdir=TRUE,echo=TRUE));
 load('dictionary.R.unsampled.rdata');
 for(ii in ls(rawdata)) assign(ii,rawdata[[ii]]);
+if(!exists('datfr') && exists('dat01')) datfr <- dat01;
 #' Edit the next line only if you copy or rename this file (make the new name the
 #' argument to `current_scriptname()`)
 .currentscript <- current_scriptname('validate_scores.R');
@@ -74,21 +75,11 @@ setNames(sapply(list(datgr,datfr,datgr2fr),function(xx){
 #'
 #' The following cases are discrepant between the database version and this
 #' crosscheck:
+#+ xcheck
 xcheck <- merge(unique(datfr),(datgr2fr)) %>% subset(frailty != fr);
 xcheck %>% pander;
 #' ***
 #' `r if(nrow(xcheck)==0) 'Excellent! No discrepancies.'`
-#'
-#'
-#'
-#'
-#'
-#'
-#'
-#'
-#'
-#'
-#'
 #'
 #'
 #' ### Save results
