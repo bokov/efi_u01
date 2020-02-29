@@ -101,6 +101,7 @@ dat03a <- group_modify(dat03,function(xx,yy,...){
 # create training subsamples
 dat03_tr <- subset(dat03,patient_num %in% subsamples$training);
 dat03a_tr <- subset(dat03a,patient_num %in% subsamples$training);
+dat03a_vl <- subset(dat03a,patient_num %in% subsamples$validation);
 
 #' # Data dictionary
 #'
