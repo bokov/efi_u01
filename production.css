@@ -14,7 +14,7 @@ html {
 body {
   color: #444;
   font-family: Georgia, Palatino, 'Palatino Linotype', Times, 'Times New Roman', serif;
-  font-size: 12.5px;
+  /*  font-size: 13.5px; */
   /*
   line-height: 1.7;
   padding: 1em;
@@ -87,9 +87,8 @@ h1,h2,h3,h4 {
   page-break-after: avoid;
 }
 
-.table-condensed {
-  margin-top: 20px;
-}
+.table-condensed {margin-top: 20px;}
+li>.table-condensed,li>p{margin:0;}
 
 
 /* otherwise the title h1 doesn't inherit the fontsize correctly */
@@ -147,6 +146,8 @@ p.abstract:after {
     content: 'Latest Developments';
 }
 */
+
+.figure {padding: 3em}
 
 .figure .caption, .subfigures > p:last-of-type, figcaption {
     color: #777;
