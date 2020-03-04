@@ -97,7 +97,33 @@ dat03 <- subset(dat02,age_at_visit_days>0 &
 
 set.seed(project_seed);
 dat03a <- group_modify(dat03,function(xx,yy,...){
-  xx[sample(seq_len(nrow(xx)),1),]}) %>% subset(nvisit > 2);
+  #if(any(xx$ed_visit)||any(xx$fall_or_fract)) browser();
+  out <- xx[sample(seq_len(nrow(xx)),1),];
+  with(subset(xx,age_at_visit_days > out$age_at_visit_days)
+       ,{
+           if(!exists('ed_visit') || is.na(.nextvis <- match(TRUE,ed_visit))){
+             out$timeED <- out$time00; out$censED <- FALSE;
+             } else {
+               out$timeED <- age_at_visit_days[.nextvis] - out$age_at_visit_days;
+               out$censED <- TRUE};
+
+           if(!exists('fall_or_fract') ||
+              is.na(.nextvis <- match(TRUE,fall_or_fract))){
+             out$timeFR <- out$time00; out$censFR <- FALSE;
+           } else {
+             out$timeFR <- age_at_visit_days[.nextvis] - out$age_at_visit_days;
+             out$censFR <- TRUE;
+           }
+           if(!exists('nonexistant_var_test') ||
+              is.na(.nextvis <- match(TRUE,nonexistant_var_test))){
+             out$timeXX <- out$time00; out$censXX <- FALSE;
+           } else {
+             out$timeXX <- age_at_visit_days[.nextvis] - out$age_at_visit_days;
+             out$censXX <- TRUE;
+           }
+         return(out)
+         })
+  }) %>% subset(nvisit > 2);
 # create training subsamples
 dat03_tr <- subset(dat03,patient_num %in% subsamples$training);
 dat03a_tr <- subset(dat03a,patient_num %in% subsamples$training);
